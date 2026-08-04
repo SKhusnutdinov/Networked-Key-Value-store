@@ -9,7 +9,7 @@ from .errors import (
 )
 
 MAX_KEY_LENGTH = 256
-MAX_VALUE_LENGTH = 1024 * 1024
+MAX_VALUE_LENGTH = 4096
 
 
 class KeyValueStore:

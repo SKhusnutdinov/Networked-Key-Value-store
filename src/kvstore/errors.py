@@ -17,3 +17,8 @@ class UnsupportedValueTypeError(KVStoreError):
 
 class NotAnIntegerError(KVStoreError):
     code = "not_an_integer"
+
+class ProtocolError(KVStoreError):
+    def __init__(self, code: str) -> None:
+        super().__init__(code)
+        self.code = code
