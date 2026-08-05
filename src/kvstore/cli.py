@@ -1,0 +1,59 @@
+
+
+import asyncio
+import sys
+
+from .client import KVClient, KVClientError
+
+DEFAULT_HOST = "localhost"
+DEFAULT_PORT = 6379
+
+async def run_cli(host: str = DEFAULT_HOST, port: int = DEFAULT_PORT) -> None:
+    try:
+        async with KVClient(host, port) as client:
+            print(f"Connected to {host}:{port}")
+            while True:
+                try:
+                    line = await asyncio.to_thread(input, "kv> ")
+                except EOFError:
+                    break
+                line = line.strip()
+                if not line:
+                    continue
+                if line.lower() in ("quit", "exit"):
+                    break
+                await _dispatch(client, line)
+    except OSError as e:
+        print(f"error could not connect to {host}:{port}: {e}")
+
+async def _dispatch(client: KVClient, line: str) -> None:
+    parts = line.split(maxsplit=2)
+    command = parts[0].upper()
+    try:
+        if command == "SET" and len(parts) == 3:
+            await client.set(parts[1], parts[2])
+            print("Success")
+        elif command == "GET" and len(parts) == 2:
+            value = await client.get(parts[1])
+            print(value if value is not None else "Value not found")
+        elif command == "DELETE" and len(parts) == 2:
+            deleted = await client.delete(parts[1])
+            print("Success" if deleted else "Value not found")
+        elif command == "EXISTS" and len(parts) == 2:
+            exists = await client.exists(parts[1])
+            print("true" if exists else "false")
+        else:
+            print("error: unrecognized command")
+    except KVClientError as e:
+        print(f"error: {e}")
+
+def main() -> None:
+    host = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_HOST
+    port = sys.argv[2] if len(sys.argv) > 2 else DEFAULT_PORT
+    try:
+        asyncio.run(run_cli(host, port))
+    except KeyboardInterrupt:
+        pass
+
+if __name__ == "__main__":
+    main()
