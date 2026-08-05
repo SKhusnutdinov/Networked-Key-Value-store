@@ -6,7 +6,7 @@ from .handler import handle
 from .protocol import Response, parse_request
 
 DEFAULT_HOST = "0.0.0.0"
-DEFAULT_PORT = "6379"
+DEFAULT_PORT = 6379
 
 
 async def handle_client(
@@ -47,7 +47,7 @@ async def run_server(host: str = DEFAULT_HOST, port: int = DEFAULT_PORT) -> None
         await server.serve_forever()
 
 def main() -> None:
-    asyncio.run(run_server)
+    asyncio.run(run_server())
 
 if __name__ == "__main__":
     main()

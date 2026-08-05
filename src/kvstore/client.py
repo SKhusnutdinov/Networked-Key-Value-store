@@ -14,7 +14,7 @@ class KVClientError(KVStoreError):
 
 
 class KVClient:
-    def __init__(self, host: str, port: str) -> None:
+    def __init__(self, host: str, port: int) -> None:
         self._host = host
         self._port = port
         self._reader: asyncio.StreamReader | None = None
@@ -27,6 +27,9 @@ class KVClient:
         if self._writer is not None:
             self._writer.close()
             await self._writer.wait_closed()
+        
+        self._writer = None
+        self._reader = None
 
     async def __aenter__(self) -> Self:
         await self.connect()
@@ -55,7 +58,8 @@ class KVClient:
         return bool(response.get("exists", False))
 
     async def send_raw(self, raw_line: str) -> str:
-        assert self._writer is not None and self._reader is not None
+        if self._writer is None or self._reader is None:
+            raise KVClientError("not_connected")
         self._writer.write((raw_line + '\n').encode("utf-8"))
         await self._writer.drain()
         line = await self._reader.readline()
