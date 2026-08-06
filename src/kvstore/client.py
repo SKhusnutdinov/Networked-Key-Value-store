@@ -56,6 +56,12 @@ class KVClient:
     async def exists(self, key: str) -> bool:
         response = await self._request({"command": Command.EXISTS.value, "key": key})
         return bool(response.get("exists", False))
+    
+    async def incr(self, key: str) -> int:
+        response = await self._request({"command": Command.INCR.value, "key": key})
+        if response["status"] == "error":
+            raise KVClientError(response.get("error", "unknown_error"))
+        return int(response["value"])
 
     async def send_raw(self, raw_line: str) -> str:
         if self._writer is None or self._reader is None:

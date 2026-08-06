@@ -3,16 +3,14 @@ import json
 
 import pytest_asyncio
 
-from kvstore.domain import KeyValueStore
 from kvstore.server import start_server
 
 
 @pytest_asyncio.fixture
-async def running_server():
-    store = KeyValueStore()
-    server = await start_server("127.0.0.1", 0, store)
+async def running_server(tmp_path):
+    server, _store = await start_server("127.0.0.1", 0, tmp_path)
     port = server.sockets[0].getsockname()[1]
-    yield "127.0.0.1", port, store
+    yield "127.0.0.1", port, _store
     server.close()
     await server.wait_closed()
 
