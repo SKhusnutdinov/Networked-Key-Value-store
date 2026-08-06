@@ -32,16 +32,22 @@ async def _dispatch(client: KVClient, line: str) -> None:
     try:
         if command == "SET" and len(parts) == 3:
             await client.set(parts[1], parts[2])
-            print("Success")
+            print("success")
         elif command == "GET" and len(parts) == 2:
             value = await client.get(parts[1])
-            print(value if value is not None else "Value not found")
+            print(value if value is not None else "value not found")
         elif command == "DELETE" and len(parts) == 2:
             deleted = await client.delete(parts[1])
-            print("Success" if deleted else "Value not found")
+            print("success" if deleted else "value not found")
         elif command == "EXISTS" and len(parts) == 2:
             exists = await client.exists(parts[1])
             print("true" if exists else "false")
+        elif command == "INCR" and len(parts) == 2:
+            value = await client.incr(parts[1])
+            print(value)
+        elif command == "EXPIRE" and len(parts) == 3:
+            success = await client.expire(parts[1], int(parts[2]))
+            print("success" if success else "value not found")
         else:
             print("error: unrecognized command")
     except KVClientError as e:

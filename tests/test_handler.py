@@ -12,8 +12,10 @@ from kvstore.store import StatefulStore
 @pytest_asyncio.fixture
 async def store(tmp_path):
     engine = KeyValueStore()
+    snapshot_path = tmp_path / "snapshot.json"
     log = AppendLog(tmp_path / "kvstore.log")
-    stateful_store = StatefulStore(engine, log, ExpirationRegistry())
+    expirations = ExpirationRegistry()
+    stateful_store = StatefulStore(engine, log, expirations, snapshot_path)
 
     yield stateful_store
 

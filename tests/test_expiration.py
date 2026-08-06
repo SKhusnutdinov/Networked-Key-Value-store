@@ -19,10 +19,11 @@ class FakeClock:
 
 
 def _build_store(tmp_path: Path, clock: FakeClock) -> StatefulStore:
+    snapshot_path = tmp_path / "snapshot.json"
     log = AppendLog(tmp_path / "kvstore.log")
     expirations = ExpirationRegistry(clock=clock)
     engine = KeyValueStore()
-    return StatefulStore(engine, log, expirations)
+    return StatefulStore(engine, log, expirations, snapshot_path)
 
 
 async def test_key_exists_before_expiry(tmp_path):
@@ -92,6 +93,6 @@ async def test_expired_key_remains_absent_after_recovery(tmp_path):
 
     engine = KeyValueStore()
     expirations = ExpirationRegistry(clock=clock)
-    recover(engine, expirations, tmp_path / "kvstore.log")
+    recover(engine, expirations, tmp_path / "snapshot.json", tmp_path / "kvstore.log")
 
     assert engine.get("session:123") is None

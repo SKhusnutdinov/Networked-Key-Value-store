@@ -50,13 +50,14 @@ async def expirations_sweep_loop(store: StatefulStore, interval: float = EXPIRAT
 async def start_server(host: str, port: int, data_dir: Path = DEFAULT_DATA_DIR) -> tuple[asyncio.AbstractServer, StatefulStore, asyncio.Task]:
     data_dir = Path(data_dir)
     data_dir.mkdir(parents=True, exist_ok=True)
+    snapshot_path = data_dir / "snapshot.json"
     log_path = data_dir / "kvstore.log"    
     
     engine = KeyValueStore()
     expirations = ExpirationRegistry()
-    recover(engine, expirations, log_path)
+    recover(engine, expirations, snapshot_path, log_path)
     log = AppendLog(log_path)
-    store = StatefulStore(engine, log, expirations)
+    store = StatefulStore(engine, log, expirations, snapshot_path)
     
     sweep_task = asyncio.create_task(expirations_sweep_loop(store))
     

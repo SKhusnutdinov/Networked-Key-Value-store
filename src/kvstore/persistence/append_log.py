@@ -31,6 +31,10 @@ class AppendLog:
     
     def close(self) -> None:
         self._file.close()
+    
+    @property
+    def size_bytes(self) -> int:
+        return self.path.stat().st_size
 
 def replay_log(path: Path, engine, expirations) -> None:
     path = Path(path)

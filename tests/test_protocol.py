@@ -49,5 +49,5 @@ def test_oversized_request_raises_protocol_error():
 
 
 def test_response_to_json_line_only_includes_set_fields():
-    response = Response(status="ok", value="Player")
-    assert response.to_json_line() == '{"status": "ok", "value": "Player"}'
+    response = Response(status="success", value="Player")
+    assert response.to_json_line() == '{"status": "success", "value": "Player"}'

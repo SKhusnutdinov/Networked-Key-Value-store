@@ -13,14 +13,14 @@ async def _run_server_and_get_address(data_dir: Path):
 async def test_values_survive_server_restart(tmp_path):
     server, _store, sweep_task, (host, port) = await _run_server_and_get_address(tmp_path)
     async with KVClient(host, port) as client:
-        await client.set("name", "Alice")
+        await client.set("name", "Player")
     sweep_task.cancel()
     server.close()
     await server.wait_closed()
 
     server, _store, sweep_task, (host, port) = await _run_server_and_get_address(tmp_path)
     async with KVClient(host, port) as client:
-        assert await client.get("name") == "Alice"
+        assert await client.get("name") == "Player"
     sweep_task.cancel()
     server.close()
     await server.wait_closed()
@@ -29,7 +29,7 @@ async def test_values_survive_server_restart(tmp_path):
 async def test_deleted_key_stays_deleted_after_restart(tmp_path):
     server, _store, sweep_task, (host, port) = await _run_server_and_get_address(tmp_path)
     async with KVClient(host, port) as client:
-        await client.set("name", "Alice")
+        await client.set("name", "Player")
         await client.delete("name")
     sweep_task.cancel()
     server.close()
