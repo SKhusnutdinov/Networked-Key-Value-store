@@ -9,4 +9,5 @@ class Command(str, Enum):
     DELETE = "DELETE"
     EXISTS = "EXISTS"
     INCR = "INCR"
+    EXPIRE = "EXPIRE"
     

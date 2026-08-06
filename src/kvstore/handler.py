@@ -28,4 +28,7 @@ async def _dispatch(request: Request, store: StatefulStore) -> Response:
     if request.command is Command.INCR:
         value = await store.incr(request.key)
         return Response(status="success", value=str(value))
+    if request.command is Command.EXPIRE:
+        success = await store.expire(request.key, request.ttl)
+        return Response(status="success" if success else "error", error=None if success else "not_found")
     raise AssertionError(f"unhandled command {request.command}")

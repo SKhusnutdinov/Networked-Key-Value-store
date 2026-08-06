@@ -4,6 +4,7 @@ from pathlib import Path
 
 from .domain import KeyValueStore
 from .errors import ProtocolError
+from .expiration import ExpirationRegistry
 from .handler import handle
 from .persistence.append_log import AppendLog
 from .persistence.recovery import recover
@@ -13,6 +14,7 @@ from .store import StatefulStore
 DEFAULT_HOST = "0.0.0.0"
 DEFAULT_PORT = 6379
 DEFAULT_DATA_DIR = Path("./data")
+EXPIRATION_SWEEP_INTERVAL_SECONDS = 1.0
 
 
 async def handle_client(
@@ -39,25 +41,33 @@ async def handle_client(
         writer.close()
         await writer.wait_closed()
 
+async def expirations_sweep_loop(store: StatefulStore, interval: float = EXPIRATION_SWEEP_INTERVAL_SECONDS) -> None:
+    while True:
+        await store.sweep_expired()
+        await asyncio.sleep(interval)
 
-async def start_server(host: str, port: int, data_dir: Path = DEFAULT_DATA_DIR) -> tuple[asyncio.AbstractServer, StatefulStore]:
+
+async def start_server(host: str, port: int, data_dir: Path = DEFAULT_DATA_DIR) -> tuple[asyncio.AbstractServer, StatefulStore, asyncio.Task]:
     data_dir = Path(data_dir)
     data_dir.mkdir(parents=True, exist_ok=True)
     log_path = data_dir / "kvstore.log"    
     
     engine = KeyValueStore()
-    recover(engine, log_path)
+    expirations = ExpirationRegistry()
+    recover(engine, expirations, log_path)
     log = AppendLog(log_path)
-    store = StatefulStore(engine, log)
+    store = StatefulStore(engine, log, expirations)
+    
+    sweep_task = asyncio.create_task(expirations_sweep_loop(store))
     
     async def _handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
         await handle_client(reader, writer, store)
     
     server = await asyncio.start_server(_handler, host, port)
-    return server, store
+    return server, store, sweep_task
 
 async def run_server(host: str = DEFAULT_HOST, port: int = DEFAULT_PORT, data_dir: Path = DEFAULT_DATA_DIR) -> None:
-    server, _store = await start_server(host, port, data_dir)
+    server, _store, _sweep_task = await start_server(host, port, data_dir)
     async with server:
         await server.serve_forever()
 

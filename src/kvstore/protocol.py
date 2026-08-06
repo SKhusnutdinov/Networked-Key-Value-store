@@ -14,6 +14,7 @@ class Request:
     command: Command
     key: str | None = None
     value: str | None = None
+    ttl: int | None = None
 
 @dataclass(frozen=True)
 class Response:
@@ -42,6 +43,7 @@ _REQUIRED_FIELDS_BY_COMMAND = {
     Command.DELETE: ("key",),
     Command.EXISTS: ("key",),
     Command.INCR: ("key",),
+    Command.EXPIRE: ("key", "ttl",),
 }
 
 def parse_request(line: str) -> Request:
@@ -74,6 +76,10 @@ def parse_request(line: str) -> Request:
     if value is not None and not isinstance(value, str):
         raise ProtocolError("invalid_field_type:value")
     
-    return Request(command=command, key=key, value=value)
+    ttl = raw.get("ttl")
+    if ttl is not None and not isinstance(ttl, int):
+        raise ProtocolError("invalid_field_type:ttl")
+    
+    return Request(command=command, key=key, value=value, ttl=ttl)
     
     

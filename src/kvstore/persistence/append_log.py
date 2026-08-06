@@ -16,6 +16,9 @@ class AppendLog:
     def append_delete(self, key: str) -> None:
         self._write({"operation": "DELETE", "key": key})
     
+    def append_expire(self, key: str, expires_at: float) -> None:
+        self._write({"operation": "EXPIRE", "key": key, "expires_at": expires_at})
+    
     def _write(self, record: dict) -> None:
         self._file.write(json.dumps(record) + "\n")
         self._file.flush()
@@ -29,7 +32,7 @@ class AppendLog:
     def close(self) -> None:
         self._file.close()
 
-def replay_log(path: Path, engine) -> None:
+def replay_log(path: Path, engine, expirations) -> None:
     path = Path(path)
     if not path.exists():
         return
@@ -47,3 +50,6 @@ def replay_log(path: Path, engine) -> None:
                 engine.set(record["key"], record["value"])
             elif operation == "DELETE":
                 engine.delete(record["key"])
+                expirations.clear_expiry(record["key"])
+            elif operation == "EXPIRE":
+                expirations.set_expiry(record["key"], record["expires_at"])

@@ -62,6 +62,10 @@ class KVClient:
         if response["status"] == "error":
             raise KVClientError(response.get("error", "unknown_error"))
         return int(response["value"])
+    
+    async def expire(self, key: str, ttl_seconds: int) -> bool:
+        response = await self._request({"command": Command.EXPIRE.value, "key": key, "expires_at": ttl_seconds})
+        return response["status"] == "success"
 
     async def send_raw(self, raw_line: str) -> str:
         if self._writer is None or self._reader is None:

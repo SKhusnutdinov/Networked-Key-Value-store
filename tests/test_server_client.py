@@ -6,9 +6,10 @@ from kvstore.server import start_server
 
 @pytest_asyncio.fixture
 async def running_server(tmp_path):
-    server, _store = await start_server("127.0.0.1", 0, tmp_path)
+    server, _store, _sweep_task = await start_server("127.0.0.1", 0, tmp_path)
     port = server.sockets[0].getsockname()[1]
     yield "127.0.0.1", port
+    _sweep_task.cancel()
     server.close()
     await server.wait_closed()
 

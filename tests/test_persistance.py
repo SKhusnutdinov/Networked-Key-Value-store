@@ -1,6 +1,7 @@
 import json
 
 from kvstore.domain import KeyValueStore
+from kvstore.expiration import ExpirationRegistry
 from kvstore.persistence.append_log import AppendLog, replay_log
 from kvstore.persistence.recovery import recover
 
@@ -13,7 +14,7 @@ def test_values_survive_log_replay(tmp_path):
     log.close()
 
     engine = KeyValueStore()
-    replay_log(log_path, engine)
+    replay_log(log_path, engine, ExpirationRegistry())
 
     assert engine.get("name") == "Player"
     assert engine.get("score") == "50"
@@ -27,7 +28,7 @@ def test_overwritten_values_recover_correctly(tmp_path):
     log.close()
 
     engine = KeyValueStore()
-    replay_log(log_path, engine)
+    replay_log(log_path, engine, ExpirationRegistry())
 
     assert engine.get("name") == "Player2"
 
@@ -40,7 +41,7 @@ def test_deleted_keys_remain_deleted_after_replay(tmp_path):
     log.close()
 
     engine = KeyValueStore()
-    replay_log(log_path, engine)
+    replay_log(log_path, engine, ExpirationRegistry())
 
     assert engine.get("name") is None
 
@@ -65,7 +66,7 @@ def test_incomplete_final_log_record_does_not_destroy_earlier_data(tmp_path):
         f.write('{"operation":"SET","key":"broke')
 
     engine = KeyValueStore()
-    replay_log(log_path, engine)
+    replay_log(log_path, engine, ExpirationRegistry())
 
     assert engine.get("name") == "Player"
 
@@ -79,7 +80,7 @@ def test_recover_rebuilds_expected_state_from_log(tmp_path):
     log.close()
 
     engine = KeyValueStore()
-    recover(engine, log_path)
+    recover(engine, ExpirationRegistry(), log_path)
 
     assert engine.get("a") is None
     assert engine.get("b") == "2"

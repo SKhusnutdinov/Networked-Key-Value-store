@@ -2,6 +2,7 @@ import pytest_asyncio
 
 from kvstore.commands import Command
 from kvstore.domain import KeyValueStore
+from kvstore.expiration import ExpirationRegistry
 from kvstore.handler import handle
 from kvstore.persistence.append_log import AppendLog
 from kvstore.protocol import Request
@@ -12,7 +13,7 @@ from kvstore.store import StatefulStore
 async def store(tmp_path):
     engine = KeyValueStore()
     log = AppendLog(tmp_path / "kvstore.log")
-    stateful_store = StatefulStore(engine, log)
+    stateful_store = StatefulStore(engine, log, ExpirationRegistry())
 
     yield stateful_store
 
