@@ -1,3 +1,6 @@
+import time
+
+from .metrics import REQUESTS, REQUEST_DURATION
 from .commands import Command
 from .errors import KVStoreError
 from .protocol import Request, Response
@@ -5,10 +8,15 @@ from .store import StatefulStore
 
 
 async def handle(request: Request, store: StatefulStore) -> Response:
+    command = request.command.value
+    start = time.perf_counter()
     try:
-        return await _dispatch(request, store)
+        response = await _dispatch(request, store)
     except KVStoreError as e:
-        return Response("error", error=e.code)
+        response = Response("error", error=e.code)
+    REQUEST_DURATION.labels(command=command).observe(time.perf_counter() - start)
+    REQUESTS.labels(command=command, status=response.status).inc()
+    return response
 
 async def _dispatch(request: Request, store: StatefulStore) -> Response:
     if request.command is Command.SET:

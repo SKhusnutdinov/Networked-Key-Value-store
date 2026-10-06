@@ -2,6 +2,10 @@ import argparse
 import asyncio
 from pathlib import Path
 
+from prometheus_client import start_http_server
+
+from kvstore.metrics import ACTIVE_CONNECTIONS
+
 from .domain import KeyValueStore
 from .errors import ProtocolError
 from .expiration import ExpirationRegistry
@@ -23,6 +27,7 @@ async def handle_client(
     store: StatefulStore
 ) -> None:
     try:
+        ACTIVE_CONNECTIONS.inc()
         while True:
             line = await reader.readline()
             if not line:
@@ -40,6 +45,7 @@ async def handle_client(
     finally:
         writer.close()
         await writer.wait_closed()
+        ACTIVE_CONNECTIONS.dec()
 
 async def expirations_sweep_loop(store: StatefulStore, interval: float = EXPIRATION_SWEEP_INTERVAL_SECONDS) -> None:
     while True:
@@ -73,6 +79,7 @@ async def run_server(host: str = DEFAULT_HOST, port: int = DEFAULT_PORT, data_di
         await server.serve_forever()
 
 def main() -> None:
+    start_http_server(8000
     parser = argparse.ArgumentParser(description="Run the kvstore TCP server.")
     parser.add_argument("--host", default=DEFAULT_HOST)
     parser.add_argument("--port", default=DEFAULT_PORT)

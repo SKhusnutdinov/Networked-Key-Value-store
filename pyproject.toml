@@ -3,7 +3,9 @@ name = "kvstore"
 version = "0.1.0"
 description = "A networked, persistent key-value store over TCP."
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "prometheus-client>=0.26.0",
+]
 
 [dependency-groups]
 dev = [
