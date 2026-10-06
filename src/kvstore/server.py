@@ -79,7 +79,7 @@ async def run_server(host: str = DEFAULT_HOST, port: int = DEFAULT_PORT, data_di
         await server.serve_forever()
 
 def main() -> None:
-    start_http_server(8000
+    start_http_server(8000)
     parser = argparse.ArgumentParser(description="Run the kvstore TCP server.")
     parser.add_argument("--host", default=DEFAULT_HOST)
     parser.add_argument("--port", default=DEFAULT_PORT)
